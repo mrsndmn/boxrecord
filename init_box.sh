@@ -2,7 +2,7 @@
 
 rm -rf /tmp/o3
 
-if [-f /tmp/o3/box.pid]; then
+if [ -f /tmp/o3/box.pid ]; then
     kill "$(cat /tmp/o3/box.pid)" || true
 fi
 
