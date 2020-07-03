@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestBox(t *testing.T) {
+func TestBoxMethod(t *testing.T) {
 	connector := tnt.New("localhost:10000", &tnt.Options{})
 	conn, err := connector.Connect()
 	require.NoError(t, err)
@@ -38,6 +38,13 @@ func TestBox(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	log.Printf("selected: %x", res)
+	log.Printf("selected: %x", res[0])
 
+}
+
+// tntboxrecord BoxTest
+type BoxTest struct {
+	f1 int    `box:index1`
+	f2 int    `box:index1`
+	f3 int    // any count of other fields
 }
