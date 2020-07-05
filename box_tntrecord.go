@@ -13,6 +13,15 @@ type BoxTest1 struct {
 	f3 uint32 `box:index2`
 
 	f4 uint32 // any other field
+
+	updateOps []tnt.Operator
+}
+
+type BoxTest1IndexedFields struct {
+	f1 uint32
+	f2 uint32
+	f3 uint32
+	f4 uint32
 }
 
 type BoxTest1PK struct {
@@ -20,33 +29,68 @@ type BoxTest1PK struct {
 	f2 uint32
 }
 
-type BoxTest1IndexedFields struct {
-	f1 uint32
-	f2 uint32
-	f3 uint32
+func (bt *BoxTest1) SetF3(newF3 uint32) {
+	if bt.f3 == newF3 {
+		return
+	}
+	bt.f3 = newF3
+	bt.updateOps = append(bt.updateOps, tnt.OpSet(2, tnt.PackInt(bt.f3))) // todo а что будет, если тут будет несколько операций с одним и тем же полем?
+
+	return
 }
 
-func Create(pk *BoxTest1IndexedFields) *BoxTest1 {
+func (bt *BoxTest1) SetF4(newF4 uint32) {
+	if bt.f4 == newF4 {
+		return
+	}
+	bt.f4 = newF4
+	bt.updateOps = append(bt.updateOps, tnt.OpSet(3, tnt.PackInt(bt.f4)))
 
-	return nil
-}
-
-func (bt *BoxTest1) Insert(ctx context.Context, conn *tnt.Connection) error {
-	_, err := conn.Exec(ctx, &tnt.Insert{
-		Tuple: tnt.Tuple{tnt.PackInt(2), tnt.PackInt(2)},
-	})
-	return err
+	return
 }
 
 func (bt *BoxTest1) Update(ctx context.Context, conn *tnt.Connection) error {
+	if len(bt.updateOps) == 0 {
+		return nil
+	}
+
 	_, err := conn.Exec(ctx, &tnt.Update{
-		Tuple: tnt.Tuple{tnt.PackInt(2), tnt.PackInt(2)},
-		Ops: []tnt.Operator{
-			tnt.OpSet(0, tnt.PackInt(bt.f1)),
-			tnt.OpSet(1, tnt.PackInt(bt.f2)),
-			tnt.OpSet(2, tnt.PackInt(bt.f3)),
+		Tuple: tnt.Tuple{
+			tnt.PackInt(bt.f1), // primary index should be enough
+			tnt.PackInt(bt.f2), // primary index should be enough
+		},
+		Ops: bt.updateOps,
+	})
+
+	bt.updateOps = nil
+	return err
+}
+
+func Create(ctx context.Context, conn *tnt.Connection, tupleFields *BoxTest1IndexedFields) (*BoxTest1, error) {
+	tuple := tnt.Tuple{
+		tnt.PackInt(tupleFields.f1),
+		tnt.PackInt(tupleFields.f2),
+		tnt.PackInt(tupleFields.f3),
+		tnt.PackInt(tupleFields.f4),
+	}
+	_, err := conn.Exec(ctx, &tnt.Insert{
+		Tuple: tuple,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &BoxTest1{tupleFields.f1, tupleFields.f2, tupleFields.f3, tupleFields.f4}, nil
+}
+
+func (bt *BoxTest1) Delete(ctx context.Context, conn *tnt.Connection, tupleFields *BoxTest1IndexedFields) error {
+	_, err := conn.Exec(ctx, &tnt.Delete{
+		Tuple: tnt.Tuple{
+			tnt.PackInt(bt.f1), // primary index should be enough
+			tnt.PackInt(bt.f2), // primary index should be enough
 		},
 	})
+
 	return err
 }
 
@@ -154,4 +198,3 @@ func parseBoxTest1Tuple(selectedTuple tnt.Tuple, record *BoxTest1) error {
 	}
 	return nil
 }
-
