@@ -17,6 +17,8 @@ type BoxTest1 struct {
 	updateOps []tnt.Operator
 }
 
+const BoxTest1Space = 0
+
 func (bt *BoxTest1) String() string {
 	return fmt.Sprintf("f1=%d f2=%d f3=%d f4=%d", bt.f1, bt.f2, bt.f3, bt.f4)
 }
@@ -71,6 +73,7 @@ func (bt *BoxTest1) Update(ctx context.Context, conn *tnt.Connection) error {
 	}
 
 	tuples, err := conn.Exec(ctx, &tnt.Update{
+		Space: BoxTest1Space,
 		Tuple: tnt.Tuple{
 			tnt.PackInt(bt.f1), // primary index should be enough
 			tnt.PackInt(bt.f2), // primary index should be enough
@@ -93,6 +96,7 @@ func Create(ctx context.Context, conn *tnt.Connection, tupleFields *BoxTest1Inde
 		tnt.PackInt(tupleFields.f4),
 	}
 	_, err := conn.Exec(ctx, &tnt.Insert{
+		Space: BoxTest1Space,
 		Tuple: tuple,
 	})
 	if err != nil {
@@ -104,6 +108,7 @@ func Create(ctx context.Context, conn *tnt.Connection, tupleFields *BoxTest1Inde
 
 func (bt *BoxTest1) Delete(ctx context.Context, conn *tnt.Connection) error {
 	_, err := conn.Exec(ctx, &tnt.Delete{
+		Space: BoxTest1Space,
 		Tuple: tnt.Tuple{
 			tnt.PackInt(bt.f1), // primary index should be enough
 			tnt.PackInt(bt.f2), // primary index should be enough
@@ -116,6 +121,7 @@ func (bt *BoxTest1) Delete(ctx context.Context, conn *tnt.Connection) error {
 func SelectByPK(ctx context.Context, conn *tnt.Connection, pk *BoxTest1PK) (*BoxTest1, error) {
 	idxTuple := tnt.Tuple{tnt.PackInt(pk.f1), tnt.PackInt(pk.f2)}
 	res, err := conn.Exec(ctx, &tnt.Select{
+		Space: BoxTest1Space,
 		Index:  0,
 		Tuples: []tnt.Tuple{idxTuple},
 	})
@@ -156,6 +162,7 @@ func SelectMultiByPK(ctx context.Context, conn *tnt.Connection, pks []*BoxTest1P
 	}
 
 	selectRes, err := conn.Exec(ctx, &tnt.Select{
+		Space: BoxTest1Space,
 		Index:  0,
 		Tuples: selectTuples,
 	})
