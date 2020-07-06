@@ -80,7 +80,7 @@ func Create(ctx context.Context, conn *tnt.Connection, tupleFields *BoxTest1Inde
 		return nil, err
 	}
 
-	return &BoxTest1{tupleFields.f1, tupleFields.f2, tupleFields.f3, tupleFields.f4}, nil
+	return &BoxTest1{tupleFields.f1, tupleFields.f2, tupleFields.f3, tupleFields.f4, nil}, nil
 }
 
 func (bt *BoxTest1) Delete(ctx context.Context, conn *tnt.Connection, tupleFields *BoxTest1IndexedFields) error {
