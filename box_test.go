@@ -23,7 +23,7 @@ func TestBoxMethod(t *testing.T) {
 	log.Printf("%x", res)
 
 	res, err = conn.Exec(context.TODO(), &tnt.Insert{
-		Tuple: tnt.Tuple{tnt.PackInt(2), tnt.PackInt(2)},
+		Tuple: tnt.Tuple{tnt.PackInt(2), tnt.PackInt(2), tnt.PackInt(1)},
 	})
 	require.NoError(t, err)
 	log.Printf("%x", res)
