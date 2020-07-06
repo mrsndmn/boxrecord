@@ -17,6 +17,10 @@ type BoxTest1 struct {
 	updateOps []tnt.Operator
 }
 
+func (bt *BoxTest1) String() string {
+	return fmt.Sprintf("f1=%d f2=%d f3=%d f4=%d", bt.f1, bt.f2, bt.f3, bt.f4)
+}
+
 type BoxTest1IndexedFields struct {
 	f1 uint32
 	f2 uint32
@@ -27,6 +31,18 @@ type BoxTest1IndexedFields struct {
 type BoxTest1PK struct {
 	f1 uint32
 	f2 uint32
+}
+
+func (bt *BoxTest1) GetPK() *BoxTest1PK {
+	return &BoxTest1PK{
+		f1: bt.f1,
+		f2: bt.f2,
+	}
+}
+
+
+func (bt *BoxTest1) Equals(other *BoxTest1) bool {
+	return bt.f1 == other.f1 && bt.f2 == other.f2 && bt.f3 == other.f3 && bt.f4 == other.f4
 }
 
 func (bt *BoxTest1) SetF3(newF3 uint32) {
@@ -54,13 +70,16 @@ func (bt *BoxTest1) Update(ctx context.Context, conn *tnt.Connection) error {
 		return nil
 	}
 
-	_, err := conn.Exec(ctx, &tnt.Update{
+	tuples, err := conn.Exec(ctx, &tnt.Update{
 		Tuple: tnt.Tuple{
 			tnt.PackInt(bt.f1), // primary index should be enough
 			tnt.PackInt(bt.f2), // primary index should be enough
 		},
 		Ops: bt.updateOps,
+		ReturnTuple: true,
 	})
+
+	fmt.Printf("%#v\n", tuples)
 
 	bt.updateOps = nil
 	return err
@@ -83,7 +102,7 @@ func Create(ctx context.Context, conn *tnt.Connection, tupleFields *BoxTest1Inde
 	return &BoxTest1{tupleFields.f1, tupleFields.f2, tupleFields.f3, tupleFields.f4, nil}, nil
 }
 
-func (bt *BoxTest1) Delete(ctx context.Context, conn *tnt.Connection, tupleFields *BoxTest1IndexedFields) error {
+func (bt *BoxTest1) Delete(ctx context.Context, conn *tnt.Connection) error {
 	_, err := conn.Exec(ctx, &tnt.Delete{
 		Tuple: tnt.Tuple{
 			tnt.PackInt(bt.f1), // primary index should be enough
@@ -94,7 +113,7 @@ func (bt *BoxTest1) Delete(ctx context.Context, conn *tnt.Connection, tupleField
 	return err
 }
 
-func SelectByf1f2(ctx context.Context, conn *tnt.Connection, pk *BoxTest1PK) (*BoxTest1, error) {
+func SelectByPK(ctx context.Context, conn *tnt.Connection, pk *BoxTest1PK) (*BoxTest1, error) {
 	idxTuple := tnt.Tuple{tnt.PackInt(pk.f1), tnt.PackInt(pk.f2)}
 	res, err := conn.Exec(ctx, &tnt.Select{
 		Index:  0,
@@ -125,7 +144,7 @@ func SelectByf1f2(ctx context.Context, conn *tnt.Connection, pk *BoxTest1PK) (*B
 	return record, nil
 }
 
-func SelectMultiByf1f2(ctx context.Context, conn *tnt.Connection, pks []*BoxTest1PK) ([]*BoxTest1, error) {
+func SelectMultiByPK(ctx context.Context, conn *tnt.Connection, pks []*BoxTest1PK) ([]*BoxTest1, error) {
 
 	if len(pks) == 0 {
 		return nil, nil
@@ -186,11 +205,15 @@ func parseBoxTest1Tuple(selectedTuple tnt.Tuple, record *BoxTest1) error {
 	for i := 2; i < len(selectedTuple); i++ {
 		switch i {
 		case 2:
-			if len(selectedTuple[3]) < 4 {
-				return fmt.Errorf("BoxTest1: field 2 expected to be uint32 with size of 4 bytes. Got: %x", selectedTuple[3])
+			if len(selectedTuple[2]) < 4 {
+				return fmt.Errorf("BoxTest1: field 2 expected to be uint32 with size of 4 bytes. Got: %x", selectedTuple[2])
 			}
-			record.f3 = tnt.UnpackInt(selectedTuple[3])
-		// case 3: ...
+			record.f3 = tnt.UnpackInt(selectedTuple[2])
+		case 3:
+			if len(selectedTuple[3]) < 4 {
+				return fmt.Errorf("BoxTest1: field 3 expected to be uint32 with size of 4 bytes. Got: %x", selectedTuple[3])
+			}
+			record.f4 = tnt.UnpackInt(selectedTuple[3])
 		default:
 			// found new field that was not described by golang struct
 			break

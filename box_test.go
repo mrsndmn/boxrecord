@@ -2,6 +2,7 @@ package tntrecord
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"testing"
 
@@ -44,7 +45,36 @@ func TestBoxMethod(t *testing.T) {
 
 // tntboxrecord BoxTest
 type BoxTest struct {
-	f1 int    `box:index1`
-	f2 int    `box:index1`
-	f3 int    // any count of other fields
+	f1 int `box:index1`
+	f2 int `box:index1`
+	f3 int // any count of other fields
+}
+
+func TestTntRecord(t *testing.T) {
+	connector := tnt.New("localhost:10000", &tnt.Options{})
+	conn, err := connector.Connect()
+	require.NoError(t, err)
+
+	defer conn.Close()
+
+	record, err := Create(context.TODO(), conn, &BoxTest1IndexedFields{0, 0, 0, 0})
+	require.NoError(t, err)
+	fmt.Printf("record %s\n", record)
+
+	record.SetF3(1)
+	err = record.Update(context.TODO(), conn)
+	require.NoError(t, err)
+
+	selectedRecord, err := SelectByPK(context.TODO(), conn, record.GetPK())
+	require.NoError(t, err)
+	fmt.Printf("selected %s\n", selectedRecord)
+	fmt.Printf("updated  %s\n", record)
+	require.True(t, selectedRecord.Equals(record))
+
+	err = record.Delete(context.TODO(), conn)
+	require.NoError(t, err)
+
+	selectedRecord, err = SelectByPK(context.TODO(), conn, record.GetPK())
+	require.NoError(t, err)
+	require.Nil(t, selectedRecord)
 }
