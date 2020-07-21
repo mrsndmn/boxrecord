@@ -32,26 +32,31 @@ func Test{{.BoxName}}(t *testing.T) {
 	fmt.Printf("updated  %s\n", record)
 	require.True(t, selectedRecord.Equals(record))
 
-//	record1, err := Create(context.TODO(), conn, &BoxTest1IndexedFields{0, 1, 0, 0})
-//	require.NoError(t, err)
-//	fmt.Printf("record1 %s\n", record1)
-//
-//	record2, err := Create(context.TODO(), conn, &BoxTest1IndexedFields{0, 2, 0, 0})
-//	require.NoError(t, err)
-//	fmt.Printf("record2 %s\n", record2)
-//
 	records, err := SelectMultiBy{{$.PrimaryIndex.Name}}(context.TODO(), conn, []*{{$.PrimaryIndex.Name}}Key{record.{{$.PrimaryIndex.Name}}Key(), record.{{$.PrimaryIndex.Name}}Key()})
 	require.Len(t, records, 2)
 
 	require.True(t, record.Equals(records[0]))
 	require.True(t, record.Equals(records[1]))
 
+	{{range $i, $index := .Indexes}}
+	selectedRecord, err = SelectBy{{$index.Name}}(context.TODO(), conn, record.{{$index.Name}}Key())
+	require.NoError(t, err)
+	{{if $index.Uniq}}
+	require.NotNil(t, selectedRecord)
+	{{else}}
+	require.Greater(t, len(selectedRecord), 0)
+	{{end}}
+	{{end}}
+
 	err = record.Delete(context.TODO(), conn)
 	require.NoError(t, err)
 
-	selectedRecord, err = SelectBy{{$.PrimaryIndex.Name}}(context.TODO(), conn, record.{{$.PrimaryIndex.Name}}Key())
+	{{range $i, $index := .Indexes}}
+	selectedRecord, err = SelectBy{{$index.Name}}(context.TODO(), conn, record.{{$index.Name}}Key())
 	require.Error(t, err)
 	require.Nil(t, selectedRecord)
+	{{end}}
+
 
 }
 

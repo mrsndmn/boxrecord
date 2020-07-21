@@ -46,11 +46,11 @@ func TestGenerator(t *testing.T) {
 		},
 		{
 			Name:       "OauthUserID",
-			Type:       schema.Types.String,
+			Type:       schema.Types.UInt32,
 			Size:       0,
 			FieldNo:    2,
-			PackFunc:   "[]byte",
-			UnpackFunc: "string",
+			PackFunc:   "tnt.PackInt",
+			UnpackFunc: "tnt.UnpackInt",
 		},
 		{
 			Name:       "Flags",
@@ -62,6 +62,16 @@ func TestGenerator(t *testing.T) {
 		},
 	}
 
+	idx2 := schema.Index{
+		Name:         "OauthUserID",
+		Fields:       []string{"OauthUserID"},
+		FieldsStucts: []schema.Field{secondary[1]},
+		Type:         "TREE",
+		Uniq:         true,
+		IndexNo:      1,
+	}
+
+
 	fields := []schema.Field{uidField}
 	fields = append(fields, secondary...)
 
@@ -72,6 +82,7 @@ func TestGenerator(t *testing.T) {
 		Fields:  fields,
 		Indexes: []schema.Index{
 			primary,
+			idx2,
 		},
 		PrimaryIndex:    primary,
 		SecondaryFields: secondary,

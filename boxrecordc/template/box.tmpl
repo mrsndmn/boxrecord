@@ -81,6 +81,7 @@ func Create(ctx context.Context, conn *tnt.Connection, tupleFields *{{$.BoxName}
 		{{$field.PackFunc}}(tupleFields.{{$field.Name}}),
 		{{end}}
 	}
+
 	_, err := conn.Exec(ctx, &tnt.Insert{
 		Space: BoxSpace,
 		Tuple: tuple,
@@ -133,7 +134,7 @@ func SelectBy{{$index.Name}}(ctx context.Context, conn *tnt.Connection, idxKey *
 	}
 	res, err := conn.Exec(ctx, &tnt.Select{
 		Space: BoxSpace,
-		Index:  0,
+		Index: {{$index.IndexNo}},
 		Tuples: []tnt.Tuple{idxTuple},
 	})
 	if err != nil {
@@ -195,7 +196,7 @@ func SelectMultiBy{{$index.Name}}(ctx context.Context, conn *tnt.Connection, idx
 
 	selectRes, err := conn.Exec(ctx, &tnt.Select{
 		Space: BoxSpace,
-		Index:  0,
+		Index: {{$index.IndexNo}},
 		Tuples: selectTuples,
 	})
 
