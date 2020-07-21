@@ -5,8 +5,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"os"
-	"text/template"
 
 	"flag"
 	"io/ioutil"
@@ -57,24 +55,24 @@ func main() {
 		return false
 	})
 
-	for _, strct := range structByName {
-		fmt.Printf("Struct %s:\n", strct.Name)
-		template.New(strct.Name).ParseFiles()
-		tmpl, err := template.New("test").Parse("{{.Count}} items are made of {{.Material}}")
-		if err != nil {
-			panic(err)
-		}
-		err = tmpl.Execute(os.Stdout, sweaters)
-		if err != nil {
-			panic(err)
-		}
-		for _, field := range strct.Struct.Fields.List {
-			fmt.Printf("Field: %s\n", field.Names[0].Name)
+	// for _, strct := range structByName {
+	// 	fmt.Printf("Struct %s:\n", strct.Name)
+	// 	template.New(strct.Name).ParseFiles()
+	// 	tmpl, err := template.New("test").Parse("{{.Count}} items are made of {{.Material}}")
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// 	err = tmpl.Execute(os.Stdout, sweaters)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// 	for _, field := range strct.Struct.Fields.List {
+	// 		fmt.Printf("Field: %s\n", field.Names[0].Name)
 
-			if field.Tag != nil {
-				fmt.Printf("Tag:   %s\n", field.Tag.Value)
-			}
-		}
-	}
+	// 		if field.Tag != nil {
+	// 			fmt.Printf("Tag:   %s\n", field.Tag.Value)
+	// 		}
+	// 	}
+	// }
 
 }
