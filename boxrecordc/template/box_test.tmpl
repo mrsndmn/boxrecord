@@ -32,13 +32,6 @@ func Test{{.BoxName}}(t *testing.T) {
 	fmt.Printf("updated  %s\n", record)
 	require.True(t, selectedRecord.Equals(record))
 
-	err = record.Delete(context.TODO(), conn)
-	require.NoError(t, err)
-
-	selectedRecord, err = SelectBy{{$.PrimaryIndex.Name}}(context.TODO(), conn, record.{{$.PrimaryIndex.Name}}Key())
-	require.NoError(t, err)
-	require.Nil(t, selectedRecord)
-
 //	record1, err := Create(context.TODO(), conn, &BoxTest1IndexedFields{0, 1, 0, 0})
 //	require.NoError(t, err)
 //	fmt.Printf("record1 %s\n", record1)
@@ -52,5 +45,13 @@ func Test{{.BoxName}}(t *testing.T) {
 
 	require.True(t, record.Equals(records[0]))
 	require.True(t, record.Equals(records[1]))
+
+	err = record.Delete(context.TODO(), conn)
+	require.NoError(t, err)
+
+	selectedRecord, err = SelectBy{{$.PrimaryIndex.Name}}(context.TODO(), conn, record.{{$.PrimaryIndex.Name}}Key())
+	require.Error(t, err)
+	require.Nil(t, selectedRecord)
+
 }
 

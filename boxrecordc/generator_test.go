@@ -36,7 +36,7 @@ func TestGenerator(t *testing.T) {
 	}
 
 	secondary := []schema.Field{
-		schema.Field{
+		{
 			Name:       "OauthSource",
 			Type:       schema.Types.String,
 			Size:       0,
@@ -44,7 +44,7 @@ func TestGenerator(t *testing.T) {
 			PackFunc:   "[]byte",
 			UnpackFunc: "string",
 		},
-		schema.Field{
+		{
 			Name:       "OauthUserID",
 			Type:       schema.Types.String,
 			Size:       0,
@@ -52,7 +52,7 @@ func TestGenerator(t *testing.T) {
 			PackFunc:   "[]byte",
 			UnpackFunc: "string",
 		},
-		schema.Field{
+		{
 			Name:       "Flags",
 			Type:       schema.Types.UInt32,
 			FieldNo:    3,
@@ -62,7 +62,7 @@ func TestGenerator(t *testing.T) {
 		},
 	}
 
-	fields := append([]schema.Field{}, uidField)
+	fields := []schema.Field{uidField}
 	fields = append(fields, secondary...)
 
 	bs := schema.BoxSchema{

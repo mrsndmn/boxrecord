@@ -141,7 +141,7 @@ func SelectBy{{$index.Name}}(ctx context.Context, conn *tnt.Connection, idxKey *
 	}
 
 	if len(res) == 0 {
-		return nil, nil
+		return nil, fmt.Errorf("no items found") // todo to ErrNoItems like xo
 	}
 
 	{{if $index.Uniq}}
@@ -160,13 +160,10 @@ func SelectBy{{$index.Name}}(ctx context.Context, conn *tnt.Connection, idxKey *
 
 	return record, nil
 	{{else}}
-	if len(selectRes) == 0 {
-		return nil, nil
-	}
 
-	records := make([]{{$.BoxName}}, len(selectRes))
-	recordsPtrs := make([]*{{$.BoxName}}, 0, len(selectRes))
-	for i, selectedTuple := range selectRes {
+	records := make([]{{$.BoxName}}, len(res))
+	recordsPtrs := make([]*{{$.BoxName}}, 0, len(res))
+	for i, selectedTuple := range res {
 
 		record := records[i]
 		err := parse{{$.BoxName}}Tuple(selectedTuple, &record)
@@ -206,6 +203,8 @@ func SelectMultiBy{{$index.Name}}(ctx context.Context, conn *tnt.Connection, idx
 		return nil, err
 	}
 
+	fmt.Printf("%d\n", len(selectRes));
+
 	if len(selectRes) == 0 {
 		return nil, nil
 	}
@@ -232,17 +231,18 @@ func parse{{$.BoxName}}Tuple(selectedTuple tnt.Tuple, record *{{$.BoxName}}) err
 	// unpack index fields
 	primaryIndexCardinality := {{ len $.PrimaryIndex.FieldsStucts }}
 	if len(selectedTuple) < primaryIndexCardinality {
-		return fmt.Errorf("Selected tuple cardinality mismatch. Expected at least %d elements in tuple. Got: %x", primaryIndexCardinality, len(selectedTuple))
+		return fmt.Errorf("selected tuple cardinality mismatch. Expected at least %d elements in tuple. Got: %x", primaryIndexCardinality, len(selectedTuple))
 	}
 
 	{{range $i, $field := $.PrimaryIndex.FieldsStucts}}
 	{{if gt $field.Size 0}}
-	if len(selectedTuple[{{$i}}]) < {{$field.Size}} {
-		return fmt.Errorf("{{$.BoxName}}: index field 0 expected to be {{$field.Type}} with size of {{$field.Size}} bytes. Got: %x", selectedTuple[{{$i}}])
+	if len(selectedTuple[{{$i}}]) != {{$field.Size}} {
+		return fmt.Errorf("{{$.BoxName}}: index (primary idx) field %d expected to be {{$field.Type}} with size of {{$field.Size}} bytes. Got (length %d): %x", {{$i}}, len(selectedTuple[{{$i}}]), selectedTuple[{{$i}}])
 	}
 	{{end}}
 	record.{{$field.Name}} = {{$field.UnpackFunc}}(selectedTuple[{{$i}}])
 	{{end}}
+	/* todo поддержать другие индексы */
 
 	// unpack another fields only if they are in box
 	for i := primaryIndexCardinality; i < len(selectedTuple); i++ {
@@ -250,11 +250,11 @@ func parse{{$.BoxName}}Tuple(selectedTuple tnt.Tuple, record *{{$.BoxName}}) err
 		{{range $i, $field := $.SecondaryFields}}
 		case {{$field.FieldNo}}:
 		{{if gt $field.Size 0}}
-			if len(selectedTuple[{{$i}}]) < {{$field.Size}} {
-				return fmt.Errorf("{{$.BoxName}}: index field %d expected to be {{$field.Type}} with size of {{$field.Size}} bytes. Got: %x", i, selectedTuple[i])
+			if len(selectedTuple[i]) != {{$field.Size}} {
+				return fmt.Errorf("{{$.BoxName}}: index field %d expected to be {{$field.Type}} with size of {{$field.Size}} bytes. Got: (length %d) %x", i, len(selectedTuple[i]), selectedTuple[i])
 			}
 		{{end}}
-			record.{{$field.Name}} = {{$field.UnpackFunc}}(selectedTuple[{{$i}}])
+			record.{{$field.Name}} = {{$field.UnpackFunc}}(selectedTuple[i])
 		{{end}}
 		default:
 			// found new field that was not described by golang struct
