@@ -3,16 +3,24 @@ package schema
 import "strings"
 
 var Types = struct {
+	Int8   string
+	Uint8  string
+	Int16  string
+	Uint16 string
 	Int32  string
 	Int64  string
 	UInt32 string
 	UInt64 string
 	String string
 }{
+	Int8:   "int8",
+	Uint8:  "uint8",
+	Int16:  "int16",
+	Uint16: "uint16",
 	Int32:  "int32",
-	Int64:  "int", // todo сделать явно int64, надо фиксить в lomik'e
+	Int64:  "int64", // todo сделать явно int64, надо фиксить в lomik'e
 	UInt32: "uint32",
-	UInt64: "uint",  // todo сделать явно uint64, надо фиксить в lomik'e
+	UInt64: "uint64", // todo сделать явно uint64, надо фиксить в lomik'e
 	String: "string",
 }
 
