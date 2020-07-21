@@ -13,7 +13,7 @@ import (
 )
 
 type StructWithName struct {
-	Name string
+	Name   string
 	Struct *ast.StructType
 }
 
@@ -56,8 +56,6 @@ func main() {
 
 		return false
 	})
-
-
 
 	for _, strct := range structByName {
 		fmt.Printf("Struct %s:\n", strct.Name)

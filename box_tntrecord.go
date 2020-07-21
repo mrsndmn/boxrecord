@@ -42,7 +42,6 @@ func (bt *BoxTest1) GetPK() *BoxTest1PK {
 	}
 }
 
-
 func (bt *BoxTest1) Equals(other *BoxTest1) bool {
 	return bt.f1 == other.f1 && bt.f2 == other.f2 && bt.f3 == other.f3 && bt.f4 == other.f4
 }

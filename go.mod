@@ -1,4 +1,4 @@
-module go-tnt-box-record
+module github.com/mrsndmn/boxrecord
 
 go 1.13
 
