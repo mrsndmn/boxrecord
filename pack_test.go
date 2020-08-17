@@ -17,12 +17,25 @@ type IProtoTestStruct struct {
 	bytes     []byte
 }
 
-func (tup *IProtoTestStruct) Size() int {
-	return 8 + 4 + 8 + 4 + len(tup.bytes)
+const tupleFieldLength = 4
+
+func (tup *IProtoTestStruct) IProtoSize() int {
+	return tupleFieldLength * 5 + (8 + 4 + 8 + 4 + len(tup.bytes))
 }
 
 func (tup *IProtoTestStruct) IProtoPack(w io.Writer) error {
-	err := binary.Write(w, binary.LittleEndian, tup.int64key)
+
+	err := binary.Write(w, binary.LittleEndian, uint32(8))
+	if err != nil {
+		return err
+	}
+
+	err = binary.Write(w, binary.LittleEndian, tup.int64key)
+	if err != nil {
+		return err
+	}
+
+	err = binary.Write(w, binary.LittleEndian, uint32(4))
 	if err != nil {
 		return err
 	}
@@ -32,12 +45,27 @@ func (tup *IProtoTestStruct) IProtoPack(w io.Writer) error {
 		return err
 	}
 
+	err = binary.Write(w, binary.LittleEndian, uint32(8))
+	if err != nil {
+		return err
+	}
+
 	err = binary.Write(w, binary.LittleEndian, tup.uint64key)
 	if err != nil {
 		return err
 	}
 
+	err = binary.Write(w, binary.LittleEndian, uint32(4))
+	if err != nil {
+		return err
+	}
+
 	err = binary.Write(w, binary.LittleEndian, tup.uint32key)
+	if err != nil {
+		return err
+	}
+
+	err = binary.Write(w, binary.LittleEndian, uint32(len(tup.bytes)))
 	if err != nil {
 		return err
 	}
@@ -51,12 +79,18 @@ func (tup *IProtoTestStruct) IProtoPack(w io.Writer) error {
 }
 
 func (tup *IProtoTestStruct) IProtoBulkPack(w io.Writer) error {
-	buf := make([]byte, tup.Size())
+	buf := make([]byte, tup.IProtoSize())
 
-	binary.LittleEndian.PutUint64(buf[0:8], uint64(tup.int64key))
-	binary.LittleEndian.PutUint32(buf[8:12], uint32(tup.int32key))
-	binary.LittleEndian.PutUint64(buf[12:20], tup.uint64key)
-	binary.LittleEndian.PutUint32(buf[20:24], tup.uint32key)
+	// https://github.com/tarantool/tarantool/blob/stable/doc/box-protocol.txt#L220
+	binary.LittleEndian.PutUint32(buf[0:4], 4)
+	binary.LittleEndian.PutUint64(buf[4:12], uint64(tup.int64key))
+	binary.LittleEndian.PutUint32(buf[12:16], 4)
+	binary.LittleEndian.PutUint32(buf[16:20], uint32(tup.int32key))
+	binary.LittleEndian.PutUint32(buf[20:24], 4)
+	binary.LittleEndian.PutUint64(buf[24:32], tup.uint64key)
+	binary.LittleEndian.PutUint32(buf[32:36], 4)
+	binary.LittleEndian.PutUint32(buf[36:40], tup.uint32key)
+	binary.LittleEndian.PutUint32(buf[40:44], uint32(len(tup.bytes)))
 	copy(buf[24:(24+len(tup.bytes))], tup.bytes[:])
 	_, err := w.Write(buf)
 
@@ -103,7 +137,7 @@ func TestIProtoBulkPack(t *testing.T) {
 	buf := new(bytes.Buffer)
 	tup.IProtoBulkPack(buf)
 
-	if buf.Len() != tup.Size() {
-		t.Errorf("Tuple size and written size are not equal. Bub len %d. Tuple size: %d", buf.Len(), tup.Size())
+	if buf.Len() != tup.IProtoSize() {
+		t.Errorf("Tuple size and written size are not equal. Bub len %d. Tuple size: %d", buf.Len(), tup.IProtoSize())
 	}
 }
