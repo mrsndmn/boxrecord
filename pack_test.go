@@ -3,7 +3,6 @@ package tntrecord
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"io"
 	"testing"
 
@@ -104,7 +103,7 @@ func TestIProtoBulkPack(t *testing.T) {
 	buf := new(bytes.Buffer)
 	tup.IProtoBulkPack(buf)
 
-	if  buf.Len() != tup.Size() {
+	if buf.Len() != tup.Size() {
 		t.Errorf("Tuple size and written size are not equal. Bub len %d. Tuple size: %d", buf.Len(), tup.Size())
 	}
 }
